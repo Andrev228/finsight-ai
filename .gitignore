@@ -3,6 +3,8 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
+.wheels/*
+!.wheels/.gitkeep
 .pytest_cache/
 .ruff_cache/
 *.egg-info/
