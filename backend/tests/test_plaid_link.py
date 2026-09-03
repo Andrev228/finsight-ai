@@ -5,8 +5,9 @@ from datetime import UTC, datetime
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.plaid.client import LinkToken, PlaidApiError
+from app.plaid.exceptions import PlaidApiError
 from app.plaid.router import get_plaid_client
+from app.plaid.schemas import LinkToken
 
 client = TestClient(app)
 

@@ -1,30 +1,10 @@
 """Minimal async client for the Plaid Sandbox API."""
 
-from datetime import datetime
-
 import httpx
-from pydantic import BaseModel
 
-from app.config import Settings
-
-
-class LinkToken(BaseModel):
-    link_token: str
-    expiration: datetime
-    request_id: str
-
-
-class PlaidConfigurationError(RuntimeError):
-    """Raised when Plaid credentials are not configured."""
-
-
-class PlaidApiError(RuntimeError):
-    """Raised when Plaid rejects a request or cannot be reached."""
-
-    def __init__(self, error_code: str, request_id: str | None = None) -> None:
-        super().__init__(error_code)
-        self.error_code = error_code
-        self.request_id = request_id
+from app.core.config import Settings
+from app.plaid.exceptions import PlaidApiError, PlaidConfigurationError
+from app.plaid.schemas import LinkToken
 
 
 class PlaidClient:
