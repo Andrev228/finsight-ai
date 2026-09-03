@@ -1,6 +1,9 @@
 services:
   api:
-    build: ./backend
+    build:
+      context: ./backend
+      args:
+        PIP_NO_INDEX: ${PIP_NO_INDEX:-0}
     env_file: .env
     ports:
       - "8000:8000"
