@@ -12,3 +12,7 @@ class PlaidApiError(RuntimeError):
         super().__init__(error_code)
         self.error_code = error_code
         self.request_id = request_id
+
+
+class PlaidItemAlreadyExistsError(RuntimeError):
+    """Raised when a Plaid Item has already been connected."""

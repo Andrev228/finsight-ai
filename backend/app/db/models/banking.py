@@ -2,7 +2,7 @@
 
 from datetime import date, datetime
 from decimal import Decimal
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from sqlalchemy import (
     Boolean,
@@ -41,6 +41,7 @@ class PlaidItem(TimestampMixin, Base):
     id: Mapped[UUID] = mapped_column(
         Uuid,
         primary_key=True,
+        default=uuid4,
         server_default=text("gen_random_uuid()"),
     )
     user_id: Mapped[str] = mapped_column(String(255), index=True)
@@ -57,6 +58,7 @@ class Account(TimestampMixin, Base):
     id: Mapped[UUID] = mapped_column(
         Uuid,
         primary_key=True,
+        default=uuid4,
         server_default=text("gen_random_uuid()"),
     )
     plaid_item_id: Mapped[UUID] = mapped_column(
@@ -83,6 +85,7 @@ class Transaction(TimestampMixin, Base):
     id: Mapped[UUID] = mapped_column(
         Uuid,
         primary_key=True,
+        default=uuid4,
         server_default=text("gen_random_uuid()"),
     )
     account_id: Mapped[UUID] = mapped_column(
