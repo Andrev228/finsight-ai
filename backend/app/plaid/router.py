@@ -4,13 +4,10 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.config import settings
-from app.plaid.client import (
-    LinkToken,
-    PlaidApiError,
-    PlaidClient,
-    PlaidConfigurationError,
-)
+from app.core.config import settings
+from app.plaid.client import PlaidClient
+from app.plaid.exceptions import PlaidApiError, PlaidConfigurationError
+from app.plaid.schemas import LinkToken
 
 router = APIRouter(prefix="/api/plaid", tags=["plaid"])
 
