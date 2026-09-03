@@ -3,6 +3,7 @@
 from pathlib import Path
 from typing import Literal
 
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
@@ -26,6 +27,7 @@ class Settings(BaseSettings):
     plaid_secret: str = ""
     plaid_env: Literal["sandbox"] = "sandbox"
     plaid_client_user_id: str = "local-development-user"
+    plaid_token_encryption_key: SecretStr = SecretStr("")
 
     azure_openai_endpoint: str = ""
     azure_openai_api_key: str = ""

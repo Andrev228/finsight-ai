@@ -2,9 +2,20 @@ name: Offline dependencies
 
 on:
   workflow_dispatch:
+    inputs:
+      target:
+        description: Dependency bundle to build
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - backend
+          - frontend
 
 jobs:
   backend:
+    if: inputs.target == 'all' || inputs.target == 'backend'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,6 +41,7 @@ jobs:
             backend/wheels
 
   frontend:
+    if: inputs.target == 'all' || inputs.target == 'frontend'
     runs-on: ubuntu-latest
     defaults:
       run:
