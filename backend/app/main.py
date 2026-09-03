@@ -1,15 +1,25 @@
 """finsight-ai FastAPI application entrypoint."""
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
 from app.config import settings
+from app.plaid.router import router as plaid_router
 
 app = FastAPI(
     title="finsight-ai",
     version=__version__,
     description="AI-powered personal finance insights (budgeting, not advice).",
 )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[settings.frontend_origin],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+app.include_router(plaid_router)
 
 
 @app.get("/health", tags=["system"])

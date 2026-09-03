@@ -1,20 +1,31 @@
 """Application configuration loaded from environment variables."""
 
+from pathlib import Path
+from typing import Literal
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+BACKEND_DIR = Path(__file__).resolve().parents[1]
+PROJECT_DIR = BACKEND_DIR.parent
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=(BACKEND_DIR / ".env", PROJECT_DIR / ".env"),
+        extra="ignore",
+    )
 
     app_env: str = "local"
     log_level: str = "info"
+    frontend_origin: str = "http://localhost:3000"
 
     database_url: str = "postgresql+asyncpg://finsight:finsight@db:5432/finsight"
     redis_url: str = "redis://redis:6379/0"
 
     plaid_client_id: str = ""
     plaid_secret: str = ""
-    plaid_env: str = "sandbox"
+    plaid_env: Literal["sandbox"] = "sandbox"
+    plaid_client_user_id: str = "local-development-user"
 
     azure_openai_endpoint: str = ""
     azure_openai_api_key: str = ""
