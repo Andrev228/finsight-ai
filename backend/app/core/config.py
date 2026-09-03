@@ -32,5 +32,15 @@ class Settings(BaseSettings):
     azure_openai_api_version: str = "2024-10-21"
     azure_openai_deployment: str = "gpt-4o-mini"
 
+    @property
+    def sqlalchemy_database_url(self) -> str:
+        if self.database_url.startswith("postgresql://"):
+            return self.database_url.replace(
+                "postgresql://",
+                "postgresql+psycopg://",
+                1,
+            )
+        return self.database_url
+
 
 settings = Settings()
