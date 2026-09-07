@@ -3,8 +3,8 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
-.wheels/*
-!.wheels/.gitkeep
+backend/.wheels/*
+!backend/.wheels/.gitkeep
 .pytest_cache/
 .ruff_cache/
 *.egg-info/
@@ -17,6 +17,8 @@ venv/
 # Node / Next.js
 node_modules/
 .next/
+.npm-offline/*
+!frontend/.npm-offline/.gitkeep
 out/
 npm-debug.log*
 yarn-error.log*
@@ -32,3 +34,8 @@ build/
 coverage/
 htmlcov/
 .coverage
+playwright-report/
+test-results/
+
+# TS incremental build info
+*.tsbuildinfo

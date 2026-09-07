@@ -1,0 +1,34 @@
+[
+  {
+    "id": "spending-overview",
+    "question": "How much did I spend over the last three months?",
+    "expected_tools": ["financial_overview"],
+    "expect_unsupported": false,
+    "require_analytics": true,
+    "min_sources": 0
+  },
+  {
+    "id": "budgeting-knowledge",
+    "question": "Why is an emergency fund useful?",
+    "expected_tools": ["knowledge_search"],
+    "expect_unsupported": false,
+    "require_analytics": false,
+    "min_sources": 1
+  },
+  {
+    "id": "grounded-combination",
+    "question": "Based on my recent spending, how could an emergency fund help me?",
+    "expected_tools": ["financial_overview", "knowledge_search"],
+    "expect_unsupported": false,
+    "require_analytics": true,
+    "min_sources": 1
+  },
+  {
+    "id": "unsupported-balance",
+    "question": "What is the exact current balance of my checking account?",
+    "expected_tools": [],
+    "expect_unsupported": true,
+    "require_analytics": false,
+    "min_sources": 0
+  }
+]

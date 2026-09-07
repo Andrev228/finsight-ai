@@ -1,86 +1,139 @@
 # finsight-ai
 
-> AI-powered personal finance assistant that turns bank transactions into grounded, explainable budgeting insights — built as a production-grade demo on Plaid Sandbox.
+Portfolio-grade personal-finance assistant built on Plaid Sandbox. It combines
+deterministic SQL analytics with grounded Gemini explanations: the model never
+calculates balances or spending totals.
 
-**Status:** 🚧 early development (Phase 0 — scaffolding)
+> Educational software, not financial advice. The demo uses synthetic Plaid
+> Sandbox data; do not connect real financial accounts.
 
-`finsight-ai` connects to bank data via **Plaid** (Sandbox), computes spending analytics deterministically in SQL, and uses a **LangGraph agent** to explain trends and surface budgeting insights through a streaming chat UI. It is positioned as **budgeting & financial insights, not licensed financial advice**.
+## What is implemented
 
-> ⚠️ Educational project. Not financial advice. Runs on Plaid Sandbox data — no real bank accounts.
-
----
-
-## Why this project
-
-A portfolio-grade AI engineering project that demonstrates the signals hiring teams actually look for: a **live deployed demo**, **RAG over real (messy) data**, an **agentic workflow** with tool calling, **evaluation pipelines** with CI regression gates, **observability**, and **cost/latency awareness**.
+- Plaid Link, encrypted access-token storage, account sync, and incremental
+  transaction sync.
+- User-scoped PostgreSQL analytics for spending, income, net cash flow,
+  monthly trends, refunds, and category totals.
+- Bounded AI orchestration with only `financial_overview` and
+  `knowledge_search` tools, structured outputs, citation validation, and
+  progress streaming.
+- PostgreSQL-backed, user-scoped conversation history with encrypted titles
+  and message content.
+- CFPB knowledge ingestion with URL allowlisting, heading-aware chunking,
+  document hashes, Gemini embeddings, and pgvector HNSW retrieval.
+- Bearer JWT authentication, explicit local-only bypasses, admin boundaries,
+  PII redaction, Redis rate limiting, and privacy-safe AI telemetry.
+- Stripe Checkout, Customer Portal, signed/idempotent webhook processing, and
+  subscription state.
+- Read-only MCP stdio server and Azure Container Apps Bicep.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  user([User]) --> web[Next.js + Vercel AI SDK<br/>streaming chat]
-  web --> api[FastAPI backend]
-  api --> plaid[[Plaid Sandbox<br/>transactions/sync]]
-  api --> pg[(Postgres + pgvector)]
-  api --> redis[(Redis<br/>cache)]
-  api --> agent{{LangGraph agent}}
-  agent -->|deterministic tools| sql[SQL analytics]
-  agent -->|grounding| rag[RAG over history]
-  agent --> llm[Azure OpenAI<br/>EU / no-retention]
-  api --> obs[Langfuse<br/>tracing + evals + cost]
+  U[Browser] --> W[Next.js]
+  W --> A[FastAPI]
+  A --> P[Plaid Sandbox]
+  A --> S[Stripe]
+  A --> R[(Redis)]
+  A --> DB[(PostgreSQL + pgvector)]
+  A --> G[Bounded financial agent]
+  G --> SQL[Deterministic SQL tools]
+  G --> RAG[CFPB RAG]
+  G --> L[Gemini]
+  M[MCP client] -->|stdio| MT[Read-only MCP server]
+  MT --> SQL
 ```
 
-**Key design principle:** the LLM never computes money. All sums, trends and cash-flow are calculated in **SQL**; the model only reasons over and explains those facts. This is more accurate, cheaper, and safer.
+See [architecture](docs/architecture.md), [threat model](docs/threat-model.md),
+and [demo runbook](docs/demo.md).
 
-## Stack
+## Local setup
 
-| Layer | Choice |
-|---|---|
-| Backend | Python, FastAPI (async) |
-| Agent | LangGraph, Pydantic structured outputs |
-| Frontend | Next.js, Vercel AI SDK, TypeScript |
-| Data | Postgres + pgvector, Redis |
-| Bank data | Plaid (Sandbox) |
-| Billing | Stripe (subscriptions) |
-| LLM | Azure OpenAI (EU region, no-retention) |
-| Observability | Langfuse (tracing, evals, cost/latency) |
-| Infra | Docker, Azure Container Apps, Bicep (IaC) |
-| CI/CD | GitHub Actions (build → test → evals gate → deploy) |
-
-## Quickstart (local)
+Requirements: Docker Desktop, Node.js 22 for direct frontend development, and
+Plaid Sandbox plus Gemini API credentials.
 
 ```bash
-cp .env.example .env        # fill in sandbox creds
-docker compose up --build   # api + postgres + redis
-# API:  http://localhost:8000/health
-# Docs: http://localhost:8000/docs
+cp .env.example .env
+# Fill PLAID_*, GEMINI_API_KEY, and generated local secrets.
+docker compose up --build -d
+docker compose exec api alembic upgrade head
+cd frontend && npm ci && npm run dev
 ```
 
-## Roadmap
+If the local firewall blocks package registries, run the
+`Offline dependencies` GitHub workflow, download its artifacts into
+`backend/.wheels` and `frontend/.npm-offline`, then build the backend with
+`PIP_NO_INDEX=1`; the frontend Dockerfile detects and uses the npm cache.
 
-- [x] **Phase 0** — Repo scaffold: Docker, FastAPI, Next.js, CI
-- [ ] **Phase 1** — Plaid Link + `/transactions/sync` + webhooks + schema
-- [ ] **Phase 2** — SQL analytics (categories, trends, cash-flow)
-- [ ] **Phase 3** — LangGraph agent + tools + structured output
-- [ ] **Phase 4** — Streaming chat UI (Vercel AI SDK)
-- [ ] **Phase 5** — Evals + Langfuse + CI regression gate
-- [ ] **Phase 6** — Guardrails + PII redaction + security
-- [ ] **Phase 7** — Stripe billing (subscriptions)
-- [ ] **Phase 8** — Azure Container Apps + Bicep IaC + deploy
-- [ ] **Phase 9** — MCP server (expose analytics as tools)
-- [ ] **Phase 10** — README, diagrams, polish
-- [ ] **Phase 11** — Metrics & ablation (accuracy / latency / cost table)
+Open `http://localhost:3000`; API docs are at `http://localhost:8000/docs`.
+Local auth/admin bypasses are explicit in `.env.example` and are rejected
+unless `APP_ENV=local`. Set both bypass flags to `false` outside local
+development.
 
-## Metrics & Ablation
+The deployed demo expects an access token issued by its identity boundary.
+For an operator-controlled portfolio demo, generate a one-hour token with
+`python backend/scripts/generate_demo_jwt.py <user-id>` and paste it into the
+UI. A public deployment should replace this operator flow with an OIDC
+provider and short-lived tokens.
 
-_Populated as components land — measured impact of each part of the pipeline._
+## Verification
 
-| Component | Accuracy | Latency p95 | Cost / query |
-|---|---|---|---|
-| Baseline (no RAG) | – | – | – |
-| + RAG (pgvector) | – | – | – |
-| + Reranking | – | – | – |
-| + Guardrails / PII | – | – | – |
+```bash
+docker compose exec api sh -lc \
+  'ruff check app tests scripts && PYTHONPATH=/app pytest -q && alembic check'
+cd frontend && npm run build
+docker compose exec api env MCP_USER_ID=local-development-user \
+  python -m app.mcp.server
+```
+
+Frontend tests run with `npm test`; browser route tests run with
+`npm run test:e2e`. Their dependencies and Playwright browser are installed
+only by GitHub Actions in environments where package registries are reachable.
+
+The live eval gate uses four routing/grounding cases and requires a `1.0`
+score. Provider/quota failures are reported separately from quality failures:
+
+```bash
+docker compose exec api python scripts/run_evals.py
+```
+
+## Measured evidence
+
+| Signal | Result | Scope |
+|---|---:|---|
+| Backend tests | 30 passing | auth, analytics, agent, RAG contracts, Stripe, MCP |
+| Static eval dataset | 4 cases | analytics, knowledge, combined, unsupported |
+| Required live eval score | 100% | available-provider runs only |
+| Last successful Gemini latency p95 | 19.63 s | one local free-tier sample |
+| Successful token usage | 548 input / 52 output | one local free-tier sample |
+| Current live gate | Provider unavailable | Gemini free-tier quota, not scored |
+
+The latency sample is intentionally labeled rather than generalized: one run
+is not statistically meaningful. No production cost claim is made because the
+current Gemini tier is free and pricing changes independently of this repo.
+See [metrics and ablation](docs/metrics.md) for reproducible coverage results.
+
+## Deployment
+
+`infra/azure/main.bicep` provisions Container Apps, PostgreSQL Flexible Server,
+an internal demo Redis container, and Log Analytics. Build the frontend image
+with `NEXT_PUBLIC_API_URL` set to the deployed API URL. Run Alembic as a
+one-shot release step before shifting traffic. The included Redis topology is
+single-replica and intended for a portfolio/demo footprint; replace it with a
+managed Redis service for production availability.
+
+## Design constraints
+
+- Monetary values remain `Decimal` and come from SQL, never LLM arithmetic.
+- Analytics periods are half-open: `[start, end_exclusive)`.
+- Transfers and loan payments are excluded from spending/income; refunds
+  reduce spending.
+- RAG content is untrusted context and only allowlisted admin ingestion can
+  mutate it.
+- Telemetry stores HMAC fingerprints, not raw questions or user IDs.
+- Conversation titles and messages are encrypted at rest and decrypted only
+  after tenant ownership checks.
+- Plaid access tokens and application secrets must never enter source control.
 
 ## License
 

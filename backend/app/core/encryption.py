@@ -23,6 +23,9 @@ class TokenCipher:
     def encrypt(self, value: str) -> bytes:
         return self._fernet.encrypt(value.encode())
 
+    def decrypt(self, value: bytes) -> str:
+        return self._fernet.decrypt(value).decode()
+
 
 def get_token_cipher() -> TokenCipher:
     return TokenCipher(settings.plaid_token_encryption_key.get_secret_value())

@@ -1,12 +1,18 @@
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 
-import AppTheme from "./theme";
+import { AuthProvider } from "@/features/auth/AuthProvider";
+import AppTheme from "@/shared/ui/AppTheme";
 
 export const metadata = {
-  title: "finsight-ai",
+  title: "FinSight",
   description: "AI-powered personal finance insights (budgeting, not advice).",
 };
 
+/**
+ * Wraps every route with the document shell, Material UI theme, and auth state.
+ *
+ * @param children - The active Next.js route.
+ */
 export default function RootLayout({
   children,
 }: {
@@ -16,7 +22,9 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AppRouterCacheProvider>
-          <AppTheme>{children}</AppTheme>
+          <AppTheme>
+            <AuthProvider>{children}</AuthProvider>
+          </AppTheme>
         </AppRouterCacheProvider>
       </body>
     </html>

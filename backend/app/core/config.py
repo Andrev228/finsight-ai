@@ -16,23 +16,38 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    app_env: str = "local"
+    app_env: Literal["local", "test", "production"] = "production"
     log_level: str = "info"
     frontend_origin: str = "http://localhost:3000"
+    admin_api_key: SecretStr = SecretStr("")
+    auth_jwt_secret: SecretStr = SecretStr("")
+    auth_jwt_issuer: str = "finsight-ai"
+    auth_jwt_audience: str = "finsight-ai-api"
+    allow_insecure_local_auth: bool = False
+    allow_insecure_local_admin: bool = False
+    ai_requests_per_minute: int = 10
 
     database_url: str = "postgresql+asyncpg://finsight:finsight@db:5432/finsight"
     redis_url: str = "redis://redis:6379/0"
 
     plaid_client_id: str = ""
-    plaid_secret: str = ""
+    plaid_secret: SecretStr = SecretStr("")
     plaid_env: Literal["sandbox"] = "sandbox"
     plaid_client_user_id: str = "local-development-user"
     plaid_token_encryption_key: SecretStr = SecretStr("")
 
-    azure_openai_endpoint: str = ""
-    azure_openai_api_key: str = ""
-    azure_openai_api_version: str = "2024-10-21"
-    azure_openai_deployment: str = "gpt-4o-mini"
+    gemini_api_key: SecretStr = SecretStr("")
+    gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta"
+    gemini_model: str = "gemini-3.6-flash"
+    gemini_embedding_model: str = "gemini-embedding-001"
+
+    stripe_secret_key: SecretStr = SecretStr("")
+    stripe_webhook_secret: SecretStr = SecretStr("")
+    stripe_price_id: str = ""
+    stripe_success_url: str = "http://localhost:3000/?billing=success"
+    stripe_cancel_url: str = "http://localhost:3000/?billing=cancelled"
+
+    mcp_user_id: str = ""
 
     @property
     def sqlalchemy_database_url(self) -> str:

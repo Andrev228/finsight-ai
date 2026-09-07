@@ -23,6 +23,9 @@ WORKDIR /app
 COPY --from=builder /install /usr/local
 COPY . .
 RUN rm -rf /app/.wheels
+RUN addgroup --system app && adduser --system --ingroup app app \
+    && chown -R app:app /app
+USER app
 
 EXPOSE 8000
 

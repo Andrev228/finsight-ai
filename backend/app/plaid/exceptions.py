@@ -16,3 +16,7 @@ class PlaidApiError(RuntimeError):
 
 class PlaidItemAlreadyExistsError(RuntimeError):
     """Raised when a Plaid Item has already been connected."""
+
+
+class PlaidItemNotFoundError(RuntimeError):
+    """Raised when a Plaid Item does not belong to the current user."""

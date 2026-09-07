@@ -4,6 +4,8 @@ pydantic==2.10.3
 pydantic-settings==2.6.1
 httpx==0.28.1
 SQLAlchemy==2.0.43
+greenlet==3.5.5; sys_platform == "darwin"
+greenlet==3.2.5; sys_platform == "linux"
 alembic==1.16.5
 psycopg[binary]==3.2.10
 cryptography==45.0.7

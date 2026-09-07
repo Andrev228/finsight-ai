@@ -7,7 +7,12 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.plaid.exceptions import PlaidApiError
 from app.plaid.router import get_plaid_client, get_plaid_service
-from app.plaid.schemas import ConnectedItem, LinkToken
+from app.plaid.schemas import (
+    AccountsSyncResult,
+    ConnectedItem,
+    LinkToken,
+    TransactionsSyncResult,
+)
 
 client = TestClient(app)
 
@@ -35,6 +40,24 @@ class SuccessfulPlaidService:
             id="8eb7fc6f-d05d-45b6-9599-44f2288b17ea",
             plaid_item_id="item-sandbox-test",
         )
+
+    async def sync_accounts(
+        self,
+        item_id: str,
+        user_id: str,
+    ) -> AccountsSyncResult:
+        assert str(item_id) == "8eb7fc6f-d05d-45b6-9599-44f2288b17ea"
+        assert user_id == "local-development-user"
+        return AccountsSyncResult(accounts=[])
+
+    async def sync_transactions(
+        self,
+        item_id: str,
+        user_id: str,
+    ) -> TransactionsSyncResult:
+        assert str(item_id) == "8eb7fc6f-d05d-45b6-9599-44f2288b17ea"
+        assert user_id == "local-development-user"
+        return TransactionsSyncResult(added=5, modified=1, removed=2)
 
 
 def test_create_link_token_returns_plaid_response():
@@ -71,3 +94,27 @@ def test_exchange_public_token_persists_item():
         "id": "8eb7fc6f-d05d-45b6-9599-44f2288b17ea",
         "plaid_item_id": "item-sandbox-test",
     }
+
+
+def test_sync_accounts_returns_saved_accounts():
+    app.dependency_overrides[get_plaid_service] = SuccessfulPlaidService
+
+    response = client.post(
+        "/api/plaid/items/8eb7fc6f-d05d-45b6-9599-44f2288b17ea/accounts/sync",
+    )
+
+    app.dependency_overrides.clear()
+    assert response.status_code == 200
+    assert response.json() == {"accounts": []}
+
+
+def test_sync_transactions_returns_change_counts():
+    app.dependency_overrides[get_plaid_service] = SuccessfulPlaidService
+
+    response = client.post(
+        "/api/plaid/items/8eb7fc6f-d05d-45b6-9599-44f2288b17ea/transactions/sync",
+    )
+
+    app.dependency_overrides.clear()
+    assert response.status_code == 200
+    assert response.json() == {"added": 5, "modified": 1, "removed": 2}

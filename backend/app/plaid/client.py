@@ -4,13 +4,18 @@ import httpx
 
 from app.core.config import Settings
 from app.plaid.exceptions import PlaidApiError, PlaidConfigurationError
-from app.plaid.schemas import LinkToken, PublicTokenExchange
+from app.plaid.schemas import (
+    LinkToken,
+    PlaidAccountsResponse,
+    PlaidTransactionsSyncResponse,
+    PublicTokenExchange,
+)
 
 
 class PlaidClient:
     def __init__(self, settings: Settings) -> None:
         self._client_id = settings.plaid_client_id
-        self._secret = settings.plaid_secret
+        self._secret = settings.plaid_secret.get_secret_value()
         self._base_url = f"https://{settings.plaid_env}.plaid.com"
 
     async def create_link_token(self, client_user_id: str) -> LinkToken:
@@ -35,6 +40,28 @@ class PlaidClient:
             {"public_token": public_token},
         )
         return PublicTokenExchange.model_validate(body)
+
+    async def get_accounts(self, access_token: str) -> PlaidAccountsResponse:
+        body = await self._post(
+            "/accounts/get",
+            {"access_token": access_token},
+        )
+        return PlaidAccountsResponse.model_validate(body)
+
+    async def sync_transactions(
+        self,
+        access_token: str,
+        cursor: str | None,
+    ) -> PlaidTransactionsSyncResponse:
+        payload: dict[str, object] = {
+            "access_token": access_token,
+            "count": 500,
+        }
+        if cursor is not None:
+            payload["cursor"] = cursor
+
+        body = await self._post("/transactions/sync", payload)
+        return PlaidTransactionsSyncResponse.model_validate(body)
 
     async def _post(self, path: str, payload: dict[str, object]) -> dict[str, object]:
         if not self._client_id or not self._secret:

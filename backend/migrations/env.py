@@ -7,7 +7,15 @@ from sqlalchemy import engine_from_config, pool
 
 from app.core.config import settings
 from app.db.base import Base
-from app.db.models import Account, PlaidItem, Transaction
+from app.db.models import (
+    Account,
+    AiRun,
+    ChatMessage,
+    Conversation,
+    KnowledgeChunk,
+    PlaidItem,
+    Transaction,
+)
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.sqlalchemy_database_url)
@@ -18,7 +26,15 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 # Keep model imports visible to Alembic autogeneration.
-_models = (Account, PlaidItem, Transaction)
+_models = (
+    Account,
+    AiRun,
+    ChatMessage,
+    Conversation,
+    KnowledgeChunk,
+    PlaidItem,
+    Transaction,
+)
 
 
 def run_migrations_offline() -> None:
