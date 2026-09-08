@@ -10,7 +10,7 @@ from app.db.session import async_session
 
 class AiRunRecorder:
     def __init__(self) -> None:
-        self._pepper = settings.plaid_token_encryption_key.get_secret_value().encode()
+        self._pepper = settings.app_encryption_key.get_secret_value().encode()
 
     async def record(
         self,

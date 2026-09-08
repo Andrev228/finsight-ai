@@ -14,7 +14,7 @@ from app.ai.observability import AiRunRecorder
 from app.ai.rag import RagService
 from app.analytics.service import AnalyticsService
 from app.core.config import settings
-from app.core.encryption import TokenCipher, get_token_cipher
+from app.core.encryption import AppCipher, get_app_cipher
 from app.db.session import get_session
 
 
@@ -48,6 +48,6 @@ def get_ingestion_service(
 
 def get_chat_history(
     session: Annotated[AsyncSession, Depends(get_session)],
-    cipher: Annotated[TokenCipher, Depends(get_token_cipher)],
+    cipher: Annotated[AppCipher, Depends(get_app_cipher)],
 ) -> ChatHistoryService:
     return ChatHistoryService(session, cipher)

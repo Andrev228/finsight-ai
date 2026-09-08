@@ -9,7 +9,7 @@ from app.core.rate_limit import _fingerprint
 def test_rate_limit_fingerprint_does_not_expose_user_id(monkeypatch):
     monkeypatch.setattr(
         rate_limit.settings,
-        "plaid_token_encryption_key",
+        "app_encryption_key",
         SecretStr("test-fingerprint-secret"),
     )
 

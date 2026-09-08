@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.encryption import TokenCipher
+from app.core.encryption import AppCipher
 from app.db.models import Account, PlaidItem, Transaction
 from app.plaid.client import PlaidClient
 from app.plaid.exceptions import (
@@ -29,7 +29,7 @@ class PlaidService:
         self,
         client: PlaidClient,
         session: AsyncSession,
-        token_cipher: TokenCipher,
+        token_cipher: AppCipher,
     ) -> None:
         self._client = client
         self._session = session

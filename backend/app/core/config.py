@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Literal
 
-from pydantic import SecretStr
+from pydantic import AliasChoices, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
@@ -34,7 +34,13 @@ class Settings(BaseSettings):
     plaid_secret: SecretStr = SecretStr("")
     plaid_env: Literal["sandbox"] = "sandbox"
     plaid_client_user_id: str = "local-development-user"
-    plaid_token_encryption_key: SecretStr = SecretStr("")
+    app_encryption_key: SecretStr = Field(
+        default=SecretStr(""),
+        validation_alias=AliasChoices(
+            "APP_ENCRYPTION_KEY",
+            "PLAID_TOKEN_ENCRYPTION_KEY",
+        ),
+    )
 
     gemini_api_key: SecretStr = SecretStr("")
     gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta"

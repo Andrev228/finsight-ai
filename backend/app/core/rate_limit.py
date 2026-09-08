@@ -46,7 +46,7 @@ AiRateLimit = Annotated[None, Depends(enforce_ai_rate_limit)]
 
 
 def _fingerprint(user_id: str) -> str:
-    secret = settings.plaid_token_encryption_key.get_secret_value().encode()
+    secret = settings.app_encryption_key.get_secret_value().encode()
     if not secret:
         raise ValueError("Rate-limit fingerprint secret is not configured")
     return hmac.new(secret, user_id.encode(), hashlib.sha256).hexdigest()

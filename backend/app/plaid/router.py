@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import CurrentUser
 from app.core.config import settings
-from app.core.encryption import EncryptionConfigurationError, get_token_cipher
+from app.core.encryption import EncryptionConfigurationError, get_app_cipher
 from app.db.session import get_session
 from app.plaid.client import PlaidClient
 from app.plaid.exceptions import (
@@ -38,7 +38,7 @@ def get_plaid_service(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> PlaidService:
     try:
-        token_cipher = get_token_cipher()
+        token_cipher = get_app_cipher()
     except EncryptionConfigurationError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

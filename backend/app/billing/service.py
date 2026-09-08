@@ -202,7 +202,7 @@ class BillingService:
 
     def _fingerprint(self, value: str) -> str:
         secret = (
-            self._settings.plaid_token_encryption_key.get_secret_value().encode()
+            self._settings.app_encryption_key.get_secret_value().encode()
         )
         if not secret:
             raise StripeError("Billing fingerprint secret is not configured")

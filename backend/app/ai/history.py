@@ -12,7 +12,7 @@ from app.ai.schemas import (
     ConversationMessage,
     ConversationSummary,
 )
-from app.core.encryption import TokenCipher
+from app.core.encryption import AppCipher
 from app.db.models import ChatMessage, Conversation
 
 
@@ -21,7 +21,7 @@ class ConversationNotFoundError(LookupError):
 
 
 class ChatHistoryService:
-    def __init__(self, session: AsyncSession, cipher: TokenCipher) -> None:
+    def __init__(self, session: AsyncSession, cipher: AppCipher) -> None:
         self._session = session
         self._cipher = cipher
 

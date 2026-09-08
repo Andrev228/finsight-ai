@@ -181,7 +181,7 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
             { name: 'REDIS_URL', value: redisUrl }
             { name: 'PLAID_CLIENT_ID', value: plaidClientId }
             { name: 'PLAID_SECRET', secretRef: 'plaid-secret' }
-            { name: 'PLAID_TOKEN_ENCRYPTION_KEY', secretRef: 'plaid-encryption-key' }
+            { name: 'APP_ENCRYPTION_KEY', secretRef: 'plaid-encryption-key' }
             { name: 'GEMINI_API_KEY', secretRef: 'gemini-key' }
             { name: 'AUTH_JWT_SECRET', secretRef: 'jwt-secret' }
             { name: 'ADMIN_API_KEY', secretRef: 'admin-key' }
