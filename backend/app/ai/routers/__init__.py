@@ -1,0 +1,1 @@
+"""AI feature route modules."""
