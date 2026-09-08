@@ -6,10 +6,10 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from app.ai.constants import ToolName
 from app.analytics.schemas import FinancialOverview
 
-ToolName = Literal["financial_overview", "knowledge_search"]
-ALLOWED_TOOLS = {"financial_overview", "knowledge_search"}
+ALLOWED_TOOLS = frozenset(ToolName)
 
 
 class ChatRequest(BaseModel):

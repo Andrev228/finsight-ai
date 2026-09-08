@@ -15,6 +15,9 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.core.config import settings
 
+MIN_JWT_SECRET_BYTES = 32
+MAX_JWT_TOKEN_LENGTH = 8192
+
 
 @dataclass(frozen=True)
 class UserPrincipal:
@@ -61,7 +64,7 @@ AdminAccess = Annotated[None, Depends(require_admin)]
 
 def _verify_token(token: str) -> str:
     secret = settings.auth_jwt_secret.get_secret_value()
-    if len(secret) < 32 or len(token) > 8192:
+    if len(secret) < MIN_JWT_SECRET_BYTES or len(token) > MAX_JWT_TOKEN_LENGTH:
         raise _unauthorized()
     parts = token.split(".")
     if len(parts) != 3:

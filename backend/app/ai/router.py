@@ -41,6 +41,8 @@ from app.analytics.service import AnalyticsService
 router = APIRouter(prefix="/api/ai", tags=["ai"])
 logger = logging.getLogger(__name__)
 
+STREAM_POLL_SECONDS = 0.5
+
 
 def get_llm_gateway() -> GeminiGateway:
     return GeminiGateway(settings)
@@ -94,16 +96,10 @@ async def get_conversation(
     current_user: CurrentUser,
     history: Annotated[ChatHistoryService, Depends(get_chat_history)],
 ) -> ConversationDetail:
-    try:
-        return await history.get_conversation(
-            conversation_id,
-            current_user.user_id,
-        )
-    except ConversationNotFoundError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Conversation was not found",
-        ) from exc
+    return await history.get_conversation(
+        conversation_id,
+        current_user.user_id,
+    )
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -114,39 +110,14 @@ async def chat(
     current_user: CurrentUser,
     _: AiRateLimit,
 ) -> ChatResponse:
-    try:
-        conversation = await history.add_user_message(
-            current_user.user_id,
-            request.message,
-            request.conversation_id,
-        )
-        response = await service.answer(request.message, current_user.user_id)
-        await history.add_assistant_message(conversation, response)
-        return response
-    except ConversationNotFoundError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Conversation was not found",
-        ) from exc
-    except LLMConfigurationError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Gemini is not configured",
-        ) from exc
-    except LLMProviderError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail={
-                "message": "Gemini request failed",
-                "error_code": exc.error_code,
-                "request_id": exc.request_id,
-            },
-        ) from exc
-    except InvalidAnalyticsPeriodError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(exc),
-        ) from exc
+    conversation = await history.add_user_message(
+        current_user.user_id,
+        request.message,
+        request.conversation_id,
+    )
+    response = await service.answer(request.message, current_user.user_id)
+    await history.add_assistant_message(conversation, response)
+    return response
 
 
 @router.post("/chat/stream")
@@ -223,7 +194,10 @@ async def stream_chat(
                     task.cancel()
                     break
                 try:
-                    event = await asyncio.wait_for(queue.get(), timeout=0.5)
+                    event = await asyncio.wait_for(
+                        queue.get(),
+                        timeout=STREAM_POLL_SECONDS,
+                    )
                 except TimeoutError:
                     continue
                 if event is None:

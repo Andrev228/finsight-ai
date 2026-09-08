@@ -5,6 +5,7 @@ from collections.abc import Awaitable, Callable
 from datetime import date, timedelta
 from time import perf_counter
 
+from app.ai.constants import AgentProgress, ToolName
 from app.ai.exceptions import LLMProviderError
 from app.ai.gateway import GeminiGateway
 from app.ai.guardrails import redact_pii
@@ -16,6 +17,8 @@ from app.analytics.service import AnalyticsService
 
 DEFAULT_ANALYTICS_DAYS = 90
 MAX_ANALYTICS_DAYS = 366
+TOP_CATEGORY_LIMIT = 5
+KNOWLEDGE_SEARCH_LIMIT = 3
 logger = logging.getLogger(__name__)
 
 
@@ -87,13 +90,13 @@ class FinancialAgent:
         tools_used: list[str],
         on_progress: Callable[[str], Awaitable[None]] | None,
     ) -> tuple[ChatResponse, tuple[int, int]]:
-        await self._report(on_progress, "planning")
+        await self._report(on_progress, AgentProgress.PLANNING)
         today = date.today()
         safe_message = redact_pii(message)
         planned = await self._gateway.plan(safe_message, today)
         plan = planned.plan
         if plan.unsupported:
-            await self._report(on_progress, "generating")
+            await self._report(on_progress, AgentProgress.GENERATING)
             response = await self._gateway.answer(
                 (
                     f"{safe_message}\n\n"
@@ -117,20 +120,20 @@ class FinancialAgent:
 
         analytics: FinancialOverview | None = None
         chunks = []
-        if "financial_overview" in plan.tools:
-            await self._report(on_progress, "analyzing_finances")
+        if ToolName.FINANCIAL_OVERVIEW in plan.tools:
+            await self._report(on_progress, AgentProgress.ANALYZING_FINANCES)
             analytics = await self._analytics.get_overview(
                 user_id=user_id,
                 start=start,
                 end_exclusive=end_exclusive,
                 currency=plan.currency.upper(),
-                category_limit=5,
+                category_limit=TOP_CATEGORY_LIMIT,
             )
-            tools_used.append("financial_overview")
-        if "knowledge_search" in plan.tools:
-            await self._report(on_progress, "searching_knowledge")
-            chunks = await self._rag.search(safe_message, limit=3)
-            tools_used.append("knowledge_search")
+            tools_used.append(ToolName.FINANCIAL_OVERVIEW)
+        if ToolName.KNOWLEDGE_SEARCH in plan.tools:
+            await self._report(on_progress, AgentProgress.SEARCHING_KNOWLEDGE)
+            chunks = await self._rag.search(safe_message, limit=KNOWLEDGE_SEARCH_LIMIT)
+            tools_used.append(ToolName.KNOWLEDGE_SEARCH)
 
         context_parts: list[str] = []
         if analytics is not None:
@@ -156,7 +159,7 @@ class FinancialAgent:
             *(["analytics"] if analytics is not None else []),
             *(str(index) for index in range(1, len(chunks) + 1)),
         }
-        await self._report(on_progress, "generating")
+        await self._report(on_progress, AgentProgress.GENERATING)
         response = await self._gateway.answer(
             safe_message,
             "\n\n".join(context_parts) or None,
