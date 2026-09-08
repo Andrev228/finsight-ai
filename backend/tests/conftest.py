@@ -12,6 +12,9 @@ from app.main import app
 
 
 class StubChatHistory:
+    async def recent_turns(self, conversation_id, user_id, limit=10):
+        return []
+
     async def add_user_message(self, user_id, content, conversation_id):
         return SimpleNamespace(
             id=conversation_id

@@ -10,7 +10,7 @@ client = TestClient(app)
 
 
 class StreamingChatService:
-    async def answer(self, message, user_id, on_progress=None):
+    async def answer(self, message, user_id, on_progress=None, history=None):
         assert on_progress is not None
         await on_progress("planning")
         await on_progress("generating")
@@ -25,7 +25,7 @@ class StreamingChatService:
 
 
 class BrokenStreamingChatService:
-    async def answer(self, message, user_id, on_progress=None):
+    async def answer(self, message, user_id, on_progress=None, history=None):
         raise RuntimeError("database unavailable")
 
 

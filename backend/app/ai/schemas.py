@@ -58,6 +58,11 @@ class ConversationDetail(ConversationSummary):
     messages: list[ConversationMessage]
 
 
+class ConversationTurn(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
+
+
 class AgentPlan(BaseModel):
     tools: list[ToolName]
     unsupported: bool = False

@@ -53,12 +53,20 @@ async def chat(
     current_user: CurrentUser,
     _: AiRateLimit,
 ) -> ChatResponse:
+    turns = await history.recent_turns(
+        request.conversation_id,
+        current_user.user_id,
+    )
     conversation = await history.add_user_message(
         current_user.user_id,
         request.message,
         request.conversation_id,
     )
-    response = await service.answer(request.message, current_user.user_id)
+    response = await service.answer(
+        request.message,
+        current_user.user_id,
+        history=turns,
+    )
     await history.add_assistant_message(conversation, response)
     return response
 

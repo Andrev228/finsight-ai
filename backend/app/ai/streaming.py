@@ -34,6 +34,10 @@ def stream_chat_events(
 
         async def run_agent() -> None:
             try:
+                turns = await history.recent_turns(
+                    request_body.conversation_id,
+                    user_id,
+                )
                 conversation = await history.add_user_message(
                     user_id,
                     request_body.message,
@@ -43,6 +47,7 @@ def stream_chat_events(
                     request_body.message,
                     user_id,
                     on_progress=report,
+                    history=turns,
                 )
                 await history.add_assistant_message(conversation, result)
                 await queue.put(

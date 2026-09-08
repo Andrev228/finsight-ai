@@ -11,7 +11,7 @@ client = TestClient(app)
 
 
 class SuccessfulChatService:
-    async def answer(self, message: str, user_id: str) -> ChatResponse:
+    async def answer(self, message: str, user_id: str, history=None) -> ChatResponse:
         assert message == "How does budgeting work?"
         assert user_id == "local-development-user"
         return ChatResponse(
@@ -26,7 +26,7 @@ class SuccessfulChatService:
 
 
 class FailingChatService:
-    async def answer(self, message: str, user_id: str) -> ChatResponse:
+    async def answer(self, message: str, user_id: str, history=None) -> ChatResponse:
         raise LLMProviderError(
             "credit_balance_exhausted",
             status_code=429,

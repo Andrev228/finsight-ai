@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pydantic import ValidationError
 
 from app.ai.exceptions import LLMConfigurationError, LLMProviderError
-from app.ai.schemas import AgentPlan, GroundedAnswerDraft, LLMResponse
+from app.ai.schemas import AgentPlan, ConversationTurn, GroundedAnswerDraft, LLMResponse
 from app.core.config import GeminiConfig
 
 SYSTEM_INSTRUCTIONS = """
@@ -96,6 +96,7 @@ class GeminiGateway:
         message: str,
         context: str | None = None,
         allowed_citations: set[str] | None = None,
+        history: list[ConversationTurn] | None = None,
     ) -> LLMResponse:
         if not self._api_key:
             raise LLMConfigurationError("Gemini API key is not configured")
@@ -108,17 +109,21 @@ class GeminiGateway:
                 "Answer using only relevant retrieved sources."
             )
 
+        contents = [
+            {
+                "role": "model" if turn.role == "assistant" else "user",
+                "parts": [{"text": turn.content}],
+            }
+            for turn in (history or [])
+        ]
+        contents.append({"role": "user", "parts": [{"text": prompt}]})
+
         body = await self._generate(
             {
                 "systemInstruction": {
                     "parts": [{"text": SYSTEM_INSTRUCTIONS}],
                 },
-                "contents": [
-                    {
-                        "role": "user",
-                        "parts": [{"text": prompt}],
-                    },
-                ],
+                "contents": contents,
                 "generationConfig": {
                     "responseMimeType": "application/json",
                     "responseJsonSchema": GroundedAnswerDraft.model_json_schema(),

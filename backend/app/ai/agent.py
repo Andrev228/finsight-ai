@@ -11,7 +11,7 @@ from app.ai.gateway import GeminiGateway
 from app.ai.guardrails import redact_pii
 from app.ai.observability import AiRunRecorder
 from app.ai.rag import RagService
-from app.ai.schemas import ChatResponse, ChatSource
+from app.ai.schemas import ChatResponse, ChatSource, ConversationTurn
 from app.analytics.schemas import FinancialOverview
 from app.analytics.service import AnalyticsService
 
@@ -44,6 +44,7 @@ class FinancialAgent:
         message: str,
         user_id: str,
         on_progress: Callable[[str], Awaitable[None]] | None = None,
+        history: list[ConversationTurn] | None = None,
     ) -> ChatResponse:
         started_at = perf_counter()
         tools_used: list[str] = []
@@ -53,6 +54,7 @@ class FinancialAgent:
                 user_id,
                 tools_used,
                 on_progress,
+                history,
             )
         except Exception as exc:
             await self._record(
@@ -89,10 +91,15 @@ class FinancialAgent:
         user_id: str,
         tools_used: list[str],
         on_progress: Callable[[str], Awaitable[None]] | None,
+        history: list[ConversationTurn] | None = None,
     ) -> tuple[ChatResponse, tuple[int, int]]:
         await self._report(on_progress, AgentProgress.PLANNING)
         today = date.today()
         safe_message = redact_pii(message)
+        safe_history = [
+            ConversationTurn(role=turn.role, content=redact_pii(turn.content))
+            for turn in (history or [])
+        ]
         planned = await self._gateway.plan(safe_message, today)
         plan = planned.plan
         if plan.unsupported:
@@ -164,6 +171,7 @@ class FinancialAgent:
             safe_message,
             "\n\n".join(context_parts) or None,
             allowed_citations=allowed_citations,
+            history=safe_history,
         )
         return ChatResponse(
             **response.model_dump(),

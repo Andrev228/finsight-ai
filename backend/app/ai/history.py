@@ -11,9 +11,12 @@ from app.ai.schemas import (
     ConversationDetail,
     ConversationMessage,
     ConversationSummary,
+    ConversationTurn,
 )
 from app.core.encryption import AppCipher
 from app.db.models import ChatMessage, Conversation
+
+MAX_HISTORY_TURNS = 10
 
 
 class ConversationNotFoundError(LookupError):
@@ -64,6 +67,31 @@ class ChatHistoryService:
                 for message in messages
             ],
         )
+
+    async def recent_turns(
+        self,
+        conversation_id: UUID | None,
+        user_id: str,
+        limit: int = MAX_HISTORY_TURNS,
+    ) -> list[ConversationTurn]:
+        if conversation_id is None:
+            return []
+        conversation = await self._owned_conversation(conversation_id, user_id)
+        messages = (
+            await self._session.scalars(
+                select(ChatMessage)
+                .where(ChatMessage.conversation_id == conversation.id)
+                .order_by(ChatMessage.created_at.desc(), ChatMessage.id.desc())
+                .limit(limit),
+            )
+        ).all()
+        return [
+            ConversationTurn(
+                role=message.role,
+                content=self._cipher.decrypt(message.content_encrypted),
+            )
+            for message in reversed(messages)
+        ]
 
     async def add_user_message(
         self,

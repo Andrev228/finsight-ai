@@ -11,11 +11,34 @@ from app.ai.agent import (
     InvalidAnalyticsPeriodError,
 )
 from app.ai.exceptions import LLMProviderError
+from app.ai.schemas import AgentPlan, ConversationTurn, LLMResponse
+from app.ai.gateway import PlannedAgentPlan
 
 
 class FailingGateway:
     async def plan(self, message, today):
         raise LLMProviderError("RESOURCE_EXHAUSTED", status_code=429)
+
+
+class CapturingGateway:
+    def __init__(self):
+        self.history = None
+
+    async def plan(self, message, today):
+        return PlannedAgentPlan(
+            plan=AgentPlan(tools=[], unsupported=False),
+            input_tokens=0,
+            output_tokens=0,
+        )
+
+    async def answer(self, message, context=None, allowed_citations=None, history=None):
+        self.history = history
+        return LLMResponse(
+            answer="ok",
+            model="test-model",
+            input_tokens=1,
+            output_tokens=1,
+        )
 
 
 class RecordingStub:
@@ -68,3 +91,22 @@ def test_provider_failure_is_recorded_without_masking_original_error():
 
     assert recorder.values["success"] is False
     assert recorder.values["error_code"] == "RESOURCE_EXHAUSTED"
+
+
+def test_prior_history_is_forwarded_to_gateway_with_pii_redacted():
+    gateway = CapturingGateway()
+    agent = FinancialAgent(gateway, object(), object(), None)
+    history = [
+        ConversationTurn(role="user", content="My email is alex@example.com"),
+        ConversationTurn(role="assistant", content="Noted."),
+    ]
+
+    result = asyncio.run(
+        agent.answer("What next?", "user-1", history=history),
+    )
+
+    assert result.answer == "ok"
+    assert gateway.history is not None
+    assert [turn.role for turn in gateway.history] == ["user", "assistant"]
+    assert "alex@example.com" not in gateway.history[0].content
+    assert "[REDACTED_EMAIL]" in gateway.history[0].content
