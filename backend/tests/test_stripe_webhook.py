@@ -26,7 +26,7 @@ def test_stripe_webhook_signature(monkeypatch):
         hashlib.sha256,
     ).hexdigest()
 
-    event = StripeClient(settings).verify_webhook(
+    event = StripeClient(settings.stripe).verify_webhook(
         body,
         f"t={timestamp},v1={signature}",
     )
@@ -42,7 +42,7 @@ def test_expired_stripe_webhook_is_rejected(monkeypatch):
     )
 
     with pytest.raises(StripeError, match="Expired"):
-        StripeClient(settings).verify_webhook(
+        StripeClient(settings.stripe).verify_webhook(
             b"{}",
             "t=1,v1=invalid",
         )

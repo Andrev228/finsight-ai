@@ -3,16 +3,16 @@
 import httpx
 
 from app.ai.exceptions import LLMConfigurationError, LLMProviderError
-from app.core.config import Settings
+from app.core.config import GeminiConfig
 
 EMBEDDING_DIMENSIONS = 768
 
 
 class GeminiEmbeddingGateway:
-    def __init__(self, settings: Settings) -> None:
-        self._api_key = settings.gemini_api_key.get_secret_value()
-        self._base_url = settings.gemini_base_url.rstrip("/")
-        self._model = settings.gemini_embedding_model
+    def __init__(self, config: GeminiConfig) -> None:
+        self._api_key = config.api_key.get_secret_value()
+        self._base_url = config.base_url.rstrip("/")
+        self._model = config.embedding_model
 
     async def embed_document(self, content: str, title: str) -> list[float]:
         return await self._embed(content, "RETRIEVAL_DOCUMENT", title)

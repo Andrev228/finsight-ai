@@ -9,7 +9,7 @@ from urllib.parse import urlencode
 
 import httpx
 
-from app.core.config import Settings
+from app.core.config import StripeConfig
 
 
 class StripeError(RuntimeError):
@@ -21,9 +21,9 @@ class StripeSignatureError(StripeError):
 
 
 class StripeClient:
-    def __init__(self, settings: Settings) -> None:
-        self._key = settings.stripe_secret_key.get_secret_value()
-        self._webhook_secret = settings.stripe_webhook_secret.get_secret_value()
+    def __init__(self, config: StripeConfig) -> None:
+        self._key = config.secret_key.get_secret_value()
+        self._webhook_secret = config.webhook_secret.get_secret_value()
         self._base_url = "https://api.stripe.com/v1"
 
     async def post(

@@ -19,13 +19,13 @@ from app.db.session import get_session
 
 
 def get_llm_gateway() -> GeminiGateway:
-    return GeminiGateway(settings)
+    return GeminiGateway(settings.gemini)
 
 
 def get_rag_service(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> RagService:
-    return RagService(GeminiEmbeddingGateway(settings), session)
+    return RagService(GeminiEmbeddingGateway(settings.gemini), session)
 
 
 def get_chat_service(
@@ -43,7 +43,7 @@ def get_chat_service(
 def get_ingestion_service(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> KnowledgeIngestionService:
-    return KnowledgeIngestionService(GeminiEmbeddingGateway(settings), session)
+    return KnowledgeIngestionService(GeminiEmbeddingGateway(settings.gemini), session)
 
 
 def get_chat_history(

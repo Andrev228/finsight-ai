@@ -30,7 +30,7 @@ router = APIRouter(prefix="/api/plaid", tags=["plaid"])
 
 
 def get_plaid_client() -> PlaidClient:
-    return PlaidClient(settings)
+    return PlaidClient(settings.plaid)
 
 
 def get_plaid_service(

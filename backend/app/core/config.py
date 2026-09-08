@@ -1,5 +1,6 @@
 """Application configuration loaded from environment variables."""
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
@@ -8,6 +9,27 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 PROJECT_DIR = BACKEND_DIR.parent
+
+
+@dataclass(frozen=True)
+class GeminiConfig:
+    api_key: SecretStr
+    base_url: str
+    model: str
+    embedding_model: str
+
+
+@dataclass(frozen=True)
+class PlaidConfig:
+    client_id: str
+    secret: SecretStr
+    env: str
+
+
+@dataclass(frozen=True)
+class StripeConfig:
+    secret_key: SecretStr
+    webhook_secret: SecretStr
 
 
 class Settings(BaseSettings):
@@ -65,6 +87,30 @@ class Settings(BaseSettings):
                     1,
                 )
         return self.database_url
+
+    @property
+    def gemini(self) -> GeminiConfig:
+        return GeminiConfig(
+            api_key=self.gemini_api_key,
+            base_url=self.gemini_base_url,
+            model=self.gemini_model,
+            embedding_model=self.gemini_embedding_model,
+        )
+
+    @property
+    def plaid(self) -> PlaidConfig:
+        return PlaidConfig(
+            client_id=self.plaid_client_id,
+            secret=self.plaid_secret,
+            env=self.plaid_env,
+        )
+
+    @property
+    def stripe(self) -> StripeConfig:
+        return StripeConfig(
+            secret_key=self.stripe_secret_key,
+            webhook_secret=self.stripe_webhook_secret,
+        )
 
 
 settings = Settings()

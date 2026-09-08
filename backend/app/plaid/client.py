@@ -2,7 +2,7 @@
 
 import httpx
 
-from app.core.config import Settings
+from app.core.config import PlaidConfig
 from app.plaid.exceptions import PlaidApiError, PlaidConfigurationError
 from app.plaid.schemas import (
     LinkToken,
@@ -13,10 +13,10 @@ from app.plaid.schemas import (
 
 
 class PlaidClient:
-    def __init__(self, settings: Settings) -> None:
-        self._client_id = settings.plaid_client_id
-        self._secret = settings.plaid_secret.get_secret_value()
-        self._base_url = f"https://{settings.plaid_env}.plaid.com"
+    def __init__(self, config: PlaidConfig) -> None:
+        self._client_id = config.client_id
+        self._secret = config.secret.get_secret_value()
+        self._base_url = f"https://{config.env}.plaid.com"
 
     async def create_link_token(self, client_user_id: str) -> LinkToken:
         body = await self._post(

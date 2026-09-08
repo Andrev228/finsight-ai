@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from app.ai.exceptions import LLMConfigurationError, LLMProviderError
 from app.ai.schemas import AgentPlan, GroundedAnswerDraft, LLMResponse
-from app.core.config import Settings
+from app.core.config import GeminiConfig
 
 SYSTEM_INSTRUCTIONS = """
 You are the finsight-ai personal budgeting assistant.
@@ -43,10 +43,10 @@ class PlannedAgentPlan:
 
 
 class GeminiGateway:
-    def __init__(self, settings: Settings) -> None:
-        self._api_key = settings.gemini_api_key.get_secret_value()
-        self._base_url = settings.gemini_base_url.rstrip("/")
-        self._model = settings.gemini_model
+    def __init__(self, config: GeminiConfig) -> None:
+        self._api_key = config.api_key.get_secret_value()
+        self._base_url = config.base_url.rstrip("/")
+        self._model = config.model
 
     async def plan(self, message: str, today: date) -> PlannedAgentPlan:
         payload = {

@@ -18,7 +18,7 @@ router = APIRouter(prefix="/api/billing", tags=["billing"])
 def get_billing_service(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> BillingService:
-    return BillingService(StripeClient(settings), session, settings)
+    return BillingService(StripeClient(settings.stripe), session, settings)
 
 
 @router.post("/checkout", response_model=BillingUrl)
@@ -70,7 +70,7 @@ async def webhook(
         )
     body = await request.body()
     try:
-        event = StripeClient(settings).verify_webhook(body, stripe_signature)
+        event = StripeClient(settings.stripe).verify_webhook(body, stripe_signature)
     except StripeSignatureError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
