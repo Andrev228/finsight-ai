@@ -152,6 +152,7 @@ export default function FinanceChat() {
         }
         if (event.type === "error") {
           receivedTerminalEvent = true;
+          if (event.conversation_id) setConversationId(event.conversation_id);
           throw new Error(event.message);
         }
       }

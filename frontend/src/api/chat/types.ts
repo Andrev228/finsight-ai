@@ -34,4 +34,4 @@ export type ConversationDetail = ConversationSummary & {
 export type ChatStreamEvent =
   | { type: "status"; status: string }
   | { type: "result"; conversation_id: string; data: ChatResult }
-  | { type: "error"; message: string; code: string };
+  | { type: "error"; message: string; code: string; conversation_id?: string };

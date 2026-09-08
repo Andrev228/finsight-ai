@@ -58,3 +58,14 @@ def test_stream_chat_converts_unexpected_failure_to_terminal_error():
     assert '"type":"error"' in response.text
     assert '"code":"INTERNAL_ERROR"' in response.text
     assert "database unavailable" not in response.text
+
+
+def test_stream_error_includes_conversation_id_for_retry():
+    app.dependency_overrides[get_chat_service] = BrokenStreamingChatService
+
+    response = client.post("/api/ai/chat/stream", json={"message": "Hello"})
+
+    app.dependency_overrides.clear()
+    assert response.status_code == 200
+    assert '"type":"error"' in response.text
+    assert '"conversation_id":' in response.text

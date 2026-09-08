@@ -43,6 +43,19 @@ def stream_chat_events(
                     request_body.message,
                     request_body.conversation_id,
                 )
+            except ConversationNotFoundError:
+                await queue.put(
+                    {
+                        "type": "error",
+                        "message": "Conversation was not found.",
+                        "code": "CONVERSATION_NOT_FOUND",
+                    },
+                )
+                await queue.put(None)
+                return
+
+            conversation_id = str(conversation.id)
+            try:
                 result = await service.answer(
                     request_body.message,
                     user_id,
@@ -53,21 +66,18 @@ def stream_chat_events(
                 await queue.put(
                     {
                         "type": "result",
-                        "conversation_id": str(conversation.id),
+                        "conversation_id": conversation_id,
                         "data": result.model_dump(mode="json"),
-                    },
-                )
-            except ConversationNotFoundError:
-                await queue.put(
-                    {
-                        "type": "error",
-                        "message": "Conversation was not found.",
-                        "code": "CONVERSATION_NOT_FOUND",
                     },
                 )
             except InvalidAnalyticsPeriodError as exc:
                 await queue.put(
-                    {"type": "error", "message": str(exc), "code": "INVALID_PERIOD"},
+                    {
+                        "type": "error",
+                        "message": str(exc),
+                        "code": "INVALID_PERIOD",
+                        "conversation_id": conversation_id,
+                    },
                 )
             except (LLMConfigurationError, LLMProviderError):
                 await queue.put(
@@ -75,6 +85,7 @@ def stream_chat_events(
                         "type": "error",
                         "message": "The AI service is temporarily unavailable.",
                         "code": "AI_UNAVAILABLE",
+                        "conversation_id": conversation_id,
                     },
                 )
             except Exception:
@@ -84,6 +95,7 @@ def stream_chat_events(
                         "type": "error",
                         "message": "The chat request failed unexpectedly.",
                         "code": "INTERNAL_ERROR",
+                        "conversation_id": conversation_id,
                     },
                 )
             finally:
