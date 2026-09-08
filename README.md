@@ -17,7 +17,7 @@ calculates balances or spending totals.
   `knowledge_search` tools, structured outputs, citation validation, and
   progress streaming.
 - PostgreSQL-backed, user-scoped conversation history with encrypted titles
-  and message content.
+  and message content, replayed as bounded, re-redacted multi-turn context.
 - CFPB knowledge ingestion with URL allowlisting, heading-aware chunking,
   document hashes, Gemini embeddings, and pgvector HNSW retrieval.
 - Bearer JWT authentication, explicit local-only bypasses, admin boundaries,
@@ -132,7 +132,10 @@ managed Redis service for production availability.
   mutate it.
 - Telemetry stores HMAC fingerprints, not raw questions or user IDs.
 - Conversation titles and messages are encrypted at rest and decrypted only
-  after tenant ownership checks.
+  after tenant ownership checks. Stored messages are kept verbatim (not
+  PII-redacted); redaction is applied only to data sent to Gemini. History is
+  retained indefinitely and has no deletion endpoint yet — see the threat
+  model before production use.
 - Plaid access tokens and application secrets must never enter source control.
 
 ## License
